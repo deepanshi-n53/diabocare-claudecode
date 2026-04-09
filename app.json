@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "diabacare",
+    "name": "DiabaCare",
     "slug": "diabacare",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,18 +13,25 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.diabacare.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2563eb"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.diabacare.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "scheme": "diabacare",
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
