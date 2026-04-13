@@ -16,59 +16,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { getLabTests, saveLabTest } from '../../utils/storage';
 import { generateId, formatDate } from '../../utils/helpers';
 import { LabTest, LabTestType, LabTestMeta } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 const LAB_TEST_META: LabTestMeta[] = [
-  {
-    type: 'hba1c',
-    label: 'HbA1c',
-    unit: '%',
-    icon: '🩸',
-    normalRange: '< 5.7%',
-    description: 'Average blood sugar over 2–3 months',
-  },
-  {
-    type: 'kidney',
-    label: 'Kidney Profile',
-    unit: 'mg/dL',
-    icon: '🫘',
-    normalRange: 'Creatinine < 1.2',
-    description: 'Kidney function assessment',
-  },
-  {
-    type: 'lipid',
-    label: 'Lipid Profile',
-    unit: 'mg/dL',
-    icon: '💛',
-    normalRange: 'LDL < 100 mg/dL',
-    description: 'Cholesterol and triglyceride levels',
-  },
-  {
-    type: 'uacr',
-    label: 'UACR Test',
-    unit: 'mg/g',
-    icon: '💧',
-    normalRange: '< 30 mg/g',
-    description: 'Urine albumin-to-creatinine ratio',
-  },
-  {
-    type: 'blood_pressure',
-    label: 'Blood Pressure',
-    unit: 'mmHg',
-    icon: '❤️',
-    normalRange: '< 120/80 mmHg',
-    description: 'Systolic and diastolic pressure',
-  },
-  {
-    type: 'eye_checkup',
-    label: 'Eye Checkup',
-    unit: '',
-    icon: '👁️',
-    normalRange: 'No retinopathy',
-    description: 'Diabetic eye exam (retinopathy screening)',
-  },
+  { type: 'hba1c', label: 'HbA1c', unit: '%', icon: '🩸', normalRange: '< 5.7%', description: 'Average blood sugar over 2–3 months' },
+  { type: 'kidney', label: 'Kidney Profile', unit: 'mg/dL', icon: '🫘', normalRange: 'Creatinine < 1.2', description: 'Kidney function assessment' },
+  { type: 'lipid', label: 'Lipid Profile', unit: 'mg/dL', icon: '💛', normalRange: 'LDL < 100 mg/dL', description: 'Cholesterol and triglyceride levels' },
+  { type: 'uacr', label: 'UACR Test', unit: 'mg/g', icon: '💧', normalRange: '< 30 mg/g', description: 'Urine albumin-to-creatinine ratio' },
+  { type: 'blood_pressure', label: 'Blood Pressure', unit: 'mmHg', icon: '❤️', normalRange: '< 120/80 mmHg', description: 'Systolic and diastolic pressure' },
+  { type: 'eye_checkup', label: 'Eye Checkup', unit: '', icon: '👁️', normalRange: 'No retinopathy', description: 'Diabetic eye exam (retinopathy screening)' },
 ];
 
 export default function TestsScreen() {
+  const { t } = useLanguage();
   const [latestTests, setLatestTests] = useState<Record<LabTestType, LabTest | null>>(
     {} as Record<LabTestType, LabTest | null>
   );
@@ -89,9 +49,7 @@ export default function TestsScreen() {
   }, []);
 
   useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [loadData])
+    useCallback(() => { loadData(); }, [loadData])
   );
 
   function openModal(meta: LabTestMeta) {
@@ -103,10 +61,7 @@ export default function TestsScreen() {
 
   async function handleSave() {
     if (!selectedMeta) return;
-    if (!inputValue.trim()) {
-      Alert.alert('Missing Value', 'Please enter a test result value.');
-      return;
-    }
+    if (!inputValue.trim()) { Alert.alert('', t.errors.missingTestValue); return; }
 
     setSaving(true);
     const test: LabTest = {
@@ -127,10 +82,8 @@ export default function TestsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="bg-white px-5 py-4 border-b border-gray-100">
-        <Text className="text-2xl font-bold text-gray-900">Lab Tests</Text>
-        <Text className="text-gray-500 text-sm mt-0.5">
-          Track your important health markers
-        </Text>
+        <Text className="text-2xl font-bold text-gray-900">{t.tests.title}</Text>
+        <Text className="text-gray-500 text-sm mt-0.5">{t.tests.subtitle}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
@@ -143,42 +96,32 @@ export default function TestsScreen() {
                 onPress={() => openModal(meta)}
                 className="bg-white rounded-2xl shadow-sm p-5 flex-row items-center"
               >
-                {/* Icon */}
                 <View className="w-14 h-14 rounded-2xl bg-gray-50 items-center justify-center mr-4">
                   <Text style={{ fontSize: 28 }}>{meta.icon}</Text>
                 </View>
 
-                {/* Content */}
                 <View className="flex-1">
-                  <Text className="text-gray-900 font-semibold text-base">
-                    {meta.label}
-                  </Text>
+                  <Text className="text-gray-900 font-semibold text-base">{meta.label}</Text>
                   <Text className="text-gray-400 text-xs mt-0.5">{meta.description}</Text>
 
                   {latest ? (
                     <View className="mt-2 flex-row items-center gap-2">
                       <Text className="text-blue-600 font-bold text-sm">
-                        {latest.value}
-                        {latest.unit ? ` ${latest.unit}` : ''}
+                        {latest.value}{latest.unit ? ` ${latest.unit}` : ''}
                       </Text>
-                      <Text className="text-gray-400 text-xs">
-                        · {formatDate(latest.date)}
-                      </Text>
+                      <Text className="text-gray-400 text-xs">· {formatDate(latest.date)}</Text>
                     </View>
                   ) : (
-                    <Text className="text-gray-400 text-xs mt-1 italic">
-                      No result recorded yet
-                    </Text>
+                    <Text className="text-gray-400 text-xs mt-1 italic">{t.tests.noResult}</Text>
                   )}
 
                   {meta.normalRange && (
                     <Text className="text-gray-300 text-xs mt-0.5">
-                      Normal: {meta.normalRange}
+                      {t.tests.normal} {meta.normalRange}
                     </Text>
                   )}
                 </View>
 
-                {/* Arrow */}
                 <View className="ml-2">
                   <Ionicons name="add-circle-outline" size={22} color="#2563eb" />
                 </View>
@@ -188,13 +131,8 @@ export default function TestsScreen() {
         </View>
 
         <View className="mt-4 bg-blue-50 rounded-2xl p-4 border border-blue-100">
-          <Text className="text-blue-800 font-semibold text-sm mb-1">
-            💡 Track Regularly
-          </Text>
-          <Text className="text-blue-700 text-xs leading-5">
-            Tap any test card to add your latest result. Regular monitoring helps
-            you and your doctor track diabetes management progress.
-          </Text>
+          <Text className="text-blue-800 font-semibold text-sm mb-1">💡 {t.tests.tipTitle}</Text>
+          <Text className="text-blue-700 text-xs leading-5">{t.tests.tipBody}</Text>
         </View>
       </ScrollView>
 
@@ -202,7 +140,6 @@ export default function TestsScreen() {
       <Modal
         visible={modalVisible}
         animationType="slide"
-        presentationStyle="pageSheet"
         onRequestClose={() => setModalVisible(false)}
       >
         <SafeAreaView className="flex-1 bg-white">
@@ -232,7 +169,7 @@ export default function TestsScreen() {
             >
               {/* Value Input */}
               <Text className="text-sm font-medium text-gray-700 mb-1">
-                Result Value <Text className="text-red-500">*</Text>
+                {t.tests.modalResult} <Text className="text-red-500">*</Text>
               </Text>
               {selectedMeta?.type === 'eye_checkup' ? (
                 <TextInput
@@ -247,23 +184,16 @@ export default function TestsScreen() {
                   <TextInput
                     className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-base text-gray-900"
                     placeholder={
-                      selectedMeta?.type === 'blood_pressure'
-                        ? 'e.g. 120/80'
-                        : selectedMeta?.type === 'hba1c'
-                        ? 'e.g. 6.5'
-                        : 'Enter value'
+                      selectedMeta?.type === 'blood_pressure' ? 'e.g. 120/80' :
+                      selectedMeta?.type === 'hba1c' ? 'e.g. 6.5' : 'Enter value'
                     }
                     placeholderTextColor="#9ca3af"
                     value={inputValue}
                     onChangeText={setInputValue}
-                    keyboardType={
-                      selectedMeta?.type === 'blood_pressure' ? 'default' : 'decimal-pad'
-                    }
+                    keyboardType={selectedMeta?.type === 'blood_pressure' ? 'default' : 'decimal-pad'}
                   />
                   {selectedMeta?.unit ? (
-                    <Text className="ml-3 text-gray-500 font-medium">
-                      {selectedMeta.unit}
-                    </Text>
+                    <Text className="ml-3 text-gray-500 font-medium">{selectedMeta.unit}</Text>
                   ) : null}
                 </View>
               )}
@@ -272,7 +202,7 @@ export default function TestsScreen() {
               <View className="flex-row items-center mb-4 gap-1">
                 <Ionicons name="calendar-outline" size={14} color="#9ca3af" />
                 <Text className="text-gray-400 text-xs">
-                  Date will be set to today: {new Date().toLocaleDateString()}
+                  {t.tests.modalDate} {new Date().toLocaleDateString()}
                 </Text>
               </View>
 
@@ -281,34 +211,33 @@ export default function TestsScreen() {
                 <View className="bg-green-50 rounded-xl p-3 mb-4 flex-row items-center gap-2">
                   <Ionicons name="information-circle" size={16} color="#16a34a" />
                   <Text className="text-green-700 text-xs">
-                    Normal range: {selectedMeta.normalRange}
+                    {t.tests.modalNormalRange} {selectedMeta.normalRange}
                   </Text>
                 </View>
               )}
 
               {/* Notes */}
               <Text className="text-sm font-medium text-gray-700 mb-1">
-                Notes <Text className="text-gray-400 font-normal">(optional)</Text>
+                {t.tests.modalNotes}{' '}
+                <Text className="text-gray-400 font-normal">{t.tests.modalNotesOptional}</Text>
               </Text>
               <TextInput
                 className="border border-gray-200 rounded-xl px-4 py-3 text-base text-gray-900 mb-6"
                 style={{ minHeight: 80, textAlignVertical: 'top' }}
-                placeholder="Any additional context..."
+                placeholder={t.tests.modalNotesPH}
                 placeholderTextColor="#9ca3af"
                 value={inputNotes}
                 onChangeText={setInputNotes}
-                multiline
+                multiline={true}
               />
 
               <TouchableOpacity
                 onPress={handleSave}
                 disabled={saving}
-                className={`rounded-2xl py-4 items-center ${
-                  saving ? 'bg-blue-400' : 'bg-blue-600'
-                }`}
+                className={`rounded-2xl py-4 items-center ${saving ? 'bg-blue-400' : 'bg-blue-600'}`}
               >
                 <Text className="text-white text-base font-semibold">
-                  {saving ? 'Saving...' : 'Save Result'}
+                  {saving ? t.tests.saving : t.tests.saveBtn}
                 </Text>
               </TouchableOpacity>
             </ScrollView>

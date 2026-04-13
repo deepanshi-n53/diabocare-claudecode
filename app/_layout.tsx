@@ -1,32 +1,48 @@
+import 'react-native-url-polyfill/auto';
 import '../global.css';
-import { useEffect, useState } from 'react';
-import { Stack, router } from 'expo-router';
+import { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { getUser } from '../utils/storage';
+import { LanguageProvider } from '../context/LanguageContext';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
-export default function RootLayout() {
-  const [checked, setChecked] = useState(false);
+function AuthGate() {
+  const { session, loading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    async function checkOnboarding() {
-      const user = await getUser();
-      if (!user || !user.onboardingComplete) {
-        router.replace('/onboarding');
-      } else {
-        router.replace('/(tabs)');
-      }
-      setChecked(true);
-    }
-    checkOnboarding();
-  }, []);
+    if (loading) return;
 
+    const inTabs = segments[0] === '(tabs)';
+    const inAuth = ['welcome', 'login', 'signup'].includes(segments[0] as string);
+
+    if (!session && !inAuth) {
+      router.replace('/welcome');
+    } else if (session && !inTabs) {
+      router.replace('/(tabs)');
+    }
+  }, [session, loading, segments]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#eff6ff' }}>
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
+  }
+
+  return <Slot />;
+}
+
+export default function RootLayout() {
   return (
-    <>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-    </>
+    <LanguageProvider>
+      <AuthProvider>
+        <StatusBar style="dark" />
+        <AuthGate />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

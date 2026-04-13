@@ -21,6 +21,7 @@ import {
   formatDateTime,
 } from '../../utils/helpers';
 import { BloodSugarReading } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -33,6 +34,7 @@ interface DayAvg {
 }
 
 export default function ReportsScreen() {
+  const { t } = useLanguage();
   const [range, setRange] = useState<Range>('7d');
   const [readings, setReadings] = useState<BloodSugarReading[]>([]);
   const [dayData, setDayData] = useState<DayAvg[]>([]);
@@ -47,9 +49,7 @@ export default function ReportsScreen() {
       const dayReadings = data.filter((r) => r.timestamp.startsWith(dateStr));
       const avg =
         dayReadings.length > 0
-          ? Math.round(
-              dayReadings.reduce((s, r) => s + r.value, 0) / dayReadings.length
-            )
+          ? Math.round(dayReadings.reduce((s, r) => s + r.value, 0) / dayReadings.length)
           : null;
       return {
         date: dateStr,
@@ -61,28 +61,21 @@ export default function ReportsScreen() {
   }, [range]);
 
   useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [loadData])
+    useCallback(() => { loadData(); }, [loadData])
   );
 
-  // Stats
   const values = readings.map((r) => r.value);
-  const avg =
-    values.length > 0
-      ? Math.round(values.reduce((a, b) => a + b, 0) / values.length)
-      : null;
+  const avg = values.length > 0
+    ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
   const highest = values.length > 0 ? Math.max(...values) : null;
   const lowest = values.length > 0 ? Math.min(...values) : null;
   const inRange = values.filter((v) => v >= 70 && v <= 140).length;
-  const inRangePct =
-    values.length > 0 ? Math.round((inRange / values.length) * 100) : null;
+  const inRangePct = values.length > 0 ? Math.round((inRange / values.length) * 100) : null;
 
   const hasData = readings.length > 0;
   const daysWithData = dayData.filter((d) => d.avg !== null).length;
   const showChart = daysWithData >= 2;
 
-  // Build gifted-charts data — only days that have readings
   const chartPoints = dayData
     .filter((d) => d.avg !== null)
     .map((d) => ({
@@ -96,10 +89,8 @@ export default function ReportsScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Header */}
         <View className="bg-white px-5 py-4 border-b border-gray-100">
-          <Text className="text-2xl font-bold text-gray-900">Reports</Text>
-          <Text className="text-gray-500 text-sm mt-0.5">
-            Blood sugar trends and history
-          </Text>
+          <Text className="text-2xl font-bold text-gray-900">{t.reports.title}</Text>
+          <Text className="text-gray-500 text-sm mt-0.5">{t.reports.subtitle}</Text>
         </View>
 
         <View className="px-4 pt-4">
@@ -109,16 +100,10 @@ export default function ReportsScreen() {
               <TouchableOpacity
                 key={r}
                 onPress={() => setRange(r)}
-                className={`flex-1 py-2.5 rounded-xl items-center ${
-                  range === r ? 'bg-white shadow-sm' : ''
-                }`}
+                className={`flex-1 py-2.5 rounded-xl items-center ${range === r ? 'bg-white shadow-sm' : ''}`}
               >
-                <Text
-                  className={`text-sm font-medium ${
-                    range === r ? 'text-blue-600' : 'text-gray-500'
-                  }`}
-                >
-                  {r === '7d' ? 'Last 7 Days' : 'Last 30 Days'}
+                <Text className={`text-sm font-medium ${range === r ? 'text-blue-600' : 'text-gray-500'}`}>
+                  {r === '7d' ? t.reports.last7 : t.reports.last30}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -129,12 +114,12 @@ export default function ReportsScreen() {
               {/* Stat Cards */}
               <View className="flex-row gap-3 mb-4">
                 <View className="flex-1 bg-white rounded-2xl shadow-sm p-4 items-center">
-                  <Text className="text-gray-400 text-xs mb-1">Average</Text>
+                  <Text className="text-gray-400 text-xs mb-1">{t.reports.average}</Text>
                   <Text className="text-2xl font-bold text-blue-600">{avg}</Text>
                   <Text className="text-gray-400 text-xs">mg/dL</Text>
                 </View>
                 <View className="flex-1 bg-white rounded-2xl shadow-sm p-4 items-center">
-                  <Text className="text-gray-400 text-xs mb-1">Highest</Text>
+                  <Text className="text-gray-400 text-xs mb-1">{t.reports.highest}</Text>
                   <Text
                     className="text-2xl font-bold"
                     style={{ color: getStatusColor(getBloodSugarStatus(highest!)) }}
@@ -144,7 +129,7 @@ export default function ReportsScreen() {
                   <Text className="text-gray-400 text-xs">mg/dL</Text>
                 </View>
                 <View className="flex-1 bg-white rounded-2xl shadow-sm p-4 items-center">
-                  <Text className="text-gray-400 text-xs mb-1">Lowest</Text>
+                  <Text className="text-gray-400 text-xs mb-1">{t.reports.lowest}</Text>
                   <Text
                     className="text-2xl font-bold"
                     style={{ color: getStatusColor(getBloodSugarStatus(lowest!)) }}
@@ -158,18 +143,14 @@ export default function ReportsScreen() {
               {/* In Range */}
               <View className="bg-white rounded-2xl shadow-sm p-4 mb-4">
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-gray-700 font-semibold text-sm">
-                    Time in Target Range (70–140 mg/dL)
+                  <Text className="text-gray-700 font-semibold text-sm flex-1">
+                    {t.reports.inRange}
                   </Text>
                   <Text
                     className="text-base font-bold"
                     style={{
-                      color:
-                        (inRangePct ?? 0) >= 70
-                          ? '#16a34a'
-                          : (inRangePct ?? 0) >= 50
-                          ? '#d97706'
-                          : '#dc2626',
+                      color: (inRangePct ?? 0) >= 70 ? '#16a34a' :
+                             (inRangePct ?? 0) >= 50 ? '#d97706' : '#dc2626',
                     }}
                   >
                     {inRangePct}%
@@ -180,17 +161,13 @@ export default function ReportsScreen() {
                     className="h-3 rounded-full"
                     style={{
                       width: `${inRangePct ?? 0}%`,
-                      backgroundColor:
-                        (inRangePct ?? 0) >= 70
-                          ? '#16a34a'
-                          : (inRangePct ?? 0) >= 50
-                          ? '#d97706'
-                          : '#dc2626',
+                      backgroundColor: (inRangePct ?? 0) >= 70 ? '#16a34a' :
+                                       (inRangePct ?? 0) >= 50 ? '#d97706' : '#dc2626',
                     }}
                   />
                 </View>
                 <Text className="text-gray-400 text-xs mt-1">
-                  {inRange} of {values.length} readings in range
+                  {inRange} {t.reports.inRangeOf} {values.length} {t.reports.inRangeReadings}
                 </Text>
               </View>
 
@@ -198,7 +175,7 @@ export default function ReportsScreen() {
               {showChart ? (
                 <View className="bg-white rounded-2xl shadow-sm p-4 mb-4">
                   <Text className="text-gray-800 font-semibold text-sm mb-3">
-                    Blood Sugar Trend (Daily Average)
+                    {t.reports.trendTitle}
                   </Text>
                   <LineChart
                     data={chartPoints}
@@ -208,12 +185,9 @@ export default function ReportsScreen() {
                     thickness={2.5}
                     dataPointsColor="#2563eb"
                     dataPointsRadius={4}
-                    startFillColor="#dbeafe"
-                    endFillColor="#ffffff"
-                    areaChart
-                    curved
+                    curved={true}
                     hideDataPoints={false}
-                    showVerticalLines
+                    showVerticalLines={true}
                     verticalLinesColor="#f3f4f6"
                     xAxisColor="#e5e7eb"
                     yAxisColor="#e5e7eb"
@@ -222,49 +196,38 @@ export default function ReportsScreen() {
                     noOfSections={5}
                     rulesColor="#f3f4f6"
                     rulesType="solid"
-                    yAxisLabelSuffix=""
                     maxValue={
                       chartPoints.length > 0
                         ? Math.ceil(Math.max(...chartPoints.map((p) => p.value)) / 50) * 50 + 50
                         : 300
                     }
-                    // Target range reference lines
-                    referenceLine1={{
-                      value: 140,
-                      lineConfig: {
-                        color: '#fbbf24',
-                        thickness: 1,
-                        dashWidth: 4,
-                        dashGap: 3,
-                        labelText: '140',
-                        labelTextStyle: { color: '#fbbf24', fontSize: 9 },
-                      },
+                    showReferenceLine1={true}
+                    referenceLine1Position={140}
+                    referenceLine1Config={{
+                      color: '#fbbf24', thickness: 1, width: SCREEN_WIDTH - 80,
+                      dashWidth: 4, dashGap: 3,
+                      labelText: '140', labelTextStyle: { color: '#fbbf24', fontSize: 9 },
                     }}
-                    referenceLine2={{
-                      value: 70,
-                      lineConfig: {
-                        color: '#86efac',
-                        thickness: 1,
-                        dashWidth: 4,
-                        dashGap: 3,
-                        labelText: '70',
-                        labelTextStyle: { color: '#86efac', fontSize: 9 },
-                      },
+                    showReferenceLine2={true}
+                    referenceLine2Position={70}
+                    referenceLine2Config={{
+                      color: '#86efac', thickness: 1, width: SCREEN_WIDTH - 80,
+                      dashWidth: 4, dashGap: 3,
+                      labelText: '70', labelTextStyle: { color: '#86efac', fontSize: 9 },
                     }}
                   />
-                  {/* Legend */}
                   <View className="flex-row items-center gap-4 px-2 mt-2">
                     <View className="flex-row items-center gap-1">
                       <View className="w-5 h-0.5 bg-blue-600 rounded" />
-                      <Text className="text-gray-500 text-xs">Daily avg</Text>
+                      <Text className="text-gray-500 text-xs">{t.reports.dailyAvg}</Text>
                     </View>
                     <View className="flex-row items-center gap-1">
                       <View className="w-5 h-0.5 bg-yellow-400 rounded" />
-                      <Text className="text-gray-500 text-xs">Upper limit (140)</Text>
+                      <Text className="text-gray-500 text-xs">{t.reports.upperLimit}</Text>
                     </View>
                     <View className="flex-row items-center gap-1">
                       <View className="w-5 h-0.5 bg-green-300 rounded" />
-                      <Text className="text-gray-500 text-xs">Lower limit (70)</Text>
+                      <Text className="text-gray-500 text-xs">{t.reports.lowerLimit}</Text>
                     </View>
                   </View>
                 </View>
@@ -272,8 +235,7 @@ export default function ReportsScreen() {
                 <View className="bg-white rounded-2xl shadow-sm p-6 mb-4 items-center">
                   <Text className="text-2xl mb-2">📉</Text>
                   <Text className="text-gray-500 text-sm text-center">
-                    Need readings on at least 2 days to show a trend chart.{'\n'}
-                    Keep logging to see your progress!
+                    {t.reports.needMoreDays}{'\n'}{t.reports.keepLogging}
                   </Text>
                 </View>
               )}
@@ -281,7 +243,7 @@ export default function ReportsScreen() {
               {/* Day-by-day breakdown */}
               <View className="bg-white rounded-2xl shadow-sm p-5 mb-4">
                 <Text className="text-gray-800 font-semibold text-base mb-3">
-                  Daily Breakdown
+                  {t.reports.dailyTitle}
                 </Text>
                 {dayData.map((day, index) => (
                   <View
@@ -298,9 +260,7 @@ export default function ReportsScreen() {
                             className="h-2 rounded-full"
                             style={{
                               width: `${Math.min((day.avg / 300) * 100, 100)}%`,
-                              backgroundColor: getStatusColor(
-                                getBloodSugarStatus(day.avg)
-                              ),
+                              backgroundColor: getStatusColor(getBloodSugarStatus(day.avg)),
                             }}
                           />
                         </View>
@@ -311,15 +271,13 @@ export default function ReportsScreen() {
                     {day.avg !== null ? (
                       <Text
                         className="text-sm font-semibold w-16 text-right"
-                        style={{
-                          color: getStatusColor(getBloodSugarStatus(day.avg)),
-                        }}
+                        style={{ color: getStatusColor(getBloodSugarStatus(day.avg)) }}
                       >
                         {day.avg} mg/dL
                       </Text>
                     ) : (
                       <Text className="text-gray-300 text-xs w-16 text-right">
-                        No data
+                        {t.reports.noDataLabel}
                       </Text>
                     )}
                   </View>
@@ -329,7 +287,7 @@ export default function ReportsScreen() {
               {/* Reading History */}
               <View className="bg-white rounded-2xl shadow-sm p-5">
                 <Text className="text-gray-800 font-semibold text-base mb-3">
-                  Reading History
+                  {t.reports.historyTitle}
                 </Text>
                 {readings.slice(0, 20).map((reading, index) => {
                   const status = getBloodSugarStatus(reading.value);
@@ -337,9 +295,7 @@ export default function ReportsScreen() {
                     <View
                       key={reading.id}
                       className={`flex-row items-center py-3 ${
-                        index < Math.min(readings.length, 20) - 1
-                          ? 'border-b border-gray-100'
-                          : ''
+                        index < Math.min(readings.length, 20) - 1 ? 'border-b border-gray-100' : ''
                       }`}
                     >
                       <View
@@ -359,17 +315,15 @@ export default function ReportsScreen() {
                         </Text>
                         <Text className="text-gray-400 text-xs">
                           {formatDateTime(reading.timestamp)} ·{' '}
-                          {reading.mealTiming === 'before' ? 'Before' : 'After'} meal
+                          {reading.mealTiming === 'before' ? t.reports.beforeMeal : t.reports.afterMeal}{' '}
+                          {t.reports.meal}
                         </Text>
                       </View>
                       <View
                         style={{ backgroundColor: `${getStatusColor(status)}18` }}
                         className="rounded-full px-2 py-0.5"
                       >
-                        <Text
-                          style={{ color: getStatusColor(status) }}
-                          className="text-xs font-medium"
-                        >
+                        <Text style={{ color: getStatusColor(status) }} className="text-xs font-medium">
                           {getStatusLabel(status)}
                         </Text>
                       </View>
@@ -378,7 +332,7 @@ export default function ReportsScreen() {
                 })}
                 {readings.length > 20 && (
                   <Text className="text-center text-gray-400 text-xs mt-3">
-                    Showing latest 20 of {readings.length} readings
+                    {t.reports.showingLatest} {readings.length} {t.reports.readings}
                   </Text>
                 )}
               </View>
@@ -387,15 +341,14 @@ export default function ReportsScreen() {
             <View className="bg-white rounded-2xl shadow-sm p-8 items-center">
               <Text className="text-5xl mb-4">📊</Text>
               <Text className="text-gray-700 font-semibold text-base mb-2 text-center">
-                No Data Yet
+                {t.reports.noData}
               </Text>
               <Text className="text-gray-400 text-sm text-center leading-6">
-                Start logging your blood sugar readings on the Log tab.
-                Your charts and statistics will appear here once you have data.
+                {t.reports.noDataSub}
               </Text>
               <View className="mt-4 bg-blue-50 rounded-xl p-3 w-full">
                 <Text className="text-blue-700 text-xs text-center">
-                  💡 Tip: Log at least 2 days of readings to see your trend chart
+                  💡 {t.reports.noDataTip}
                 </Text>
               </View>
             </View>

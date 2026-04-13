@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { View, Text, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../../context/LanguageContext';
 
 type TabIconProps = {
   name: React.ComponentProps<typeof Ionicons>['name'];
@@ -27,6 +28,8 @@ function TabIcon({ name, focused, label }: TabIconProps) {
 }
 
 export default function TabLayout() {
+  const { t } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -50,61 +53,54 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t.nav.home,
           tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} label="Home" />
+            <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} label={t.nav.home} />
           ),
         }}
       />
       <Tabs.Screen
         name="log"
         options={{
-          title: 'Log',
+          title: t.nav.log,
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              name={focused ? 'add-circle' : 'add-circle-outline'}
-              focused={focused}
-              label="Log"
-            />
+            <TabIcon name={focused ? 'add-circle' : 'add-circle-outline'} focused={focused} label={t.nav.log} />
           ),
         }}
       />
       <Tabs.Screen
         name="tests"
         options={{
-          title: 'Tests',
+          title: t.nav.tests,
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              name={focused ? 'flask' : 'flask-outline'}
-              focused={focused}
-              label="Tests"
-            />
+            <TabIcon name={focused ? 'flask' : 'flask-outline'} focused={focused} label={t.nav.tests} />
           ),
         }}
       />
       <Tabs.Screen
         name="diet"
         options={{
-          title: 'Diet',
+          title: t.nav.diet,
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              name={focused ? 'nutrition' : 'nutrition-outline'}
-              focused={focused}
-              label="Diet"
-            />
+            <TabIcon name={focused ? 'nutrition' : 'nutrition-outline'} focused={focused} label={t.nav.diet} />
           ),
         }}
       />
       <Tabs.Screen
         name="reports"
         options={{
-          title: 'Reports',
+          title: t.nav.reports,
           tabBarIcon: ({ focused }) => (
-            <TabIcon
-              name={focused ? 'bar-chart' : 'bar-chart-outline'}
-              focused={focused}
-              label="Reports"
-            />
+            <TabIcon name={focused ? 'bar-chart' : 'bar-chart-outline'} focused={focused} label={t.nav.reports} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: t.nav.settings,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? 'settings' : 'settings-outline'} focused={focused} label={t.nav.settings} />
           ),
         }}
       />
