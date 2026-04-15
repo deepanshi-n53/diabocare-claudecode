@@ -13,6 +13,7 @@ import { useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { saveMeal, getTodaysMeals, deleteMeal } from '../../utils/storage';
+import { isValidCarbs } from '../../utils/validators';
 import { generateId, formatTime } from '../../utils/helpers';
 import { Meal } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
@@ -55,7 +56,7 @@ export default function DietScreen() {
 
   async function handleSave() {
     if (!mealName.trim()) { Alert.alert('', t.errors.missingMealName); return; }
-    if (carbs && (isNaN(Number(carbs)) || Number(carbs) < 0)) {
+    if (carbs && (isNaN(Number(carbs)) || !isValidCarbs(Number(carbs)))) {
       Alert.alert('', t.errors.invalidCarbs); return;
     }
     if (calories && (isNaN(Number(calories)) || Number(calories) < 0)) {
@@ -74,20 +75,25 @@ export default function DietScreen() {
       timestamp: new Date().toISOString(),
     };
 
-    await saveMeal(meal);
-    await loadMeals();
+    const { error: saveError } = await saveMeal(meal);
     setSaving(false);
+    if (saveError) { Alert.alert('Save Failed', saveError); return; }
+    await loadMeals();
     resetForm();
     setShowForm(false);
   }
 
   async function handleDelete(id: string) {
-    Alert.alert('', '', [
+    Alert.alert('', 'Delete this meal?', [
       { text: t.settings.cancelBtn, style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => { await deleteMeal(id); await loadMeals(); },
+        onPress: async () => {
+          const { error } = await deleteMeal(id);
+          if (error) { Alert.alert('Delete Failed', error); return; }
+          await loadMeals();
+        },
       },
     ]);
   }

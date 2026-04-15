@@ -5,6 +5,7 @@ export interface BloodSugarReading {
   insulinUnits?: number;
   notes?: string;
   timestamp: string; // ISO string
+  source?: 'manual' | 'cgm';
 }
 
 export interface Meal {
@@ -25,6 +26,7 @@ export interface LabTest {
   unit: string;
   date: string; // ISO string
   notes?: string;
+  status?: 'normal' | 'warning' | 'critical';
 }
 
 export type LabTestType =
@@ -47,10 +49,32 @@ export interface LabTestMeta {
 export interface User {
   name: string;
   age?: number;
-  diabetesType?: 'Type 1' | 'Type 2' | 'Gestational' | 'Pre-diabetes';
+  diabetesType?: 'type1' | 'type2' | 'gestational' | 'prediabetes';
   targetMin: number; // mg/dL
   targetMax: number; // mg/dL
   onboardingComplete: boolean;
+}
+
+export interface Medication {
+  id: string;
+  user_id: string;
+  medication_name: string;
+  dose: number;
+  unit: string;
+  scheduled_time?: string; // HH:MM
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface MedicationLog {
+  id: string;
+  user_id: string;
+  medication_id: string;
+  taken_at?: string; // ISO string
+  scheduled_at: string; // ISO string
+  missed: boolean;
+  dose_taken?: number;
+  created_at: string;
 }
 
 export type BloodSugarStatus = 'low' | 'normal' | 'high' | 'very_high';

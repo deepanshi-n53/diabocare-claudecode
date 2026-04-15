@@ -31,12 +31,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
-    if (!error && data) {
+      .maybeSingle(); // .single() returns 406 when no row found; maybeSingle() returns null
+    if (data) {
       setProfile(data as Profile);
       if (data.language) {
         await setLanguage(data.language as Language);
       }
+    } else if (!error) {
+      // No profile row yet (trigger may not have run) — create a blank one
+      const { data: created } = await supabase
+        .from('profiles')
+        .upsert({ id: userId })
+        .select()
+        .maybeSingle();
+      if (created) setProfile(created as Profile);
     }
   }
 

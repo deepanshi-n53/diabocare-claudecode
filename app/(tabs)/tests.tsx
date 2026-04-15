@@ -18,6 +18,67 @@ import { generateId, formatDate } from '../../utils/helpers';
 import { LabTest, LabTestType, LabTestMeta } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
 
+type TestStatus = 'normal' | 'warning' | 'critical';
+
+const REFERENCE_RANGES: Partial<Record<LabTestType, { ranges: { max: number; label: string; status: TestStatus }[] }>> = {
+  hba1c: {
+    ranges: [
+      { max: 5.7, label: 'Normal', status: 'normal' },
+      { max: 6.4, label: 'Prediabetes', status: 'warning' },
+      { max: 999, label: 'Diabetes range', status: 'critical' },
+    ],
+  },
+  kidney: {
+    ranges: [
+      { max: 1.2, label: 'Normal creatinine', status: 'normal' },
+      { max: 2.0, label: 'Mildly elevated', status: 'warning' },
+      { max: 999, label: 'High — see doctor', status: 'critical' },
+    ],
+  },
+  lipid: {
+    ranges: [
+      { max: 200, label: 'Desirable', status: 'normal' },
+      { max: 239, label: 'Borderline high', status: 'warning' },
+      { max: 999, label: 'High cholesterol', status: 'critical' },
+    ],
+  },
+  uacr: {
+    ranges: [
+      { max: 30, label: 'Normal', status: 'normal' },
+      { max: 300, label: 'Microalbuminuria', status: 'warning' },
+      { max: 9999, label: 'Macroalbuminuria', status: 'critical' },
+    ],
+  },
+};
+
+function getTestStatus(type: LabTestType, value: string): TestStatus | null {
+  const ref = REFERENCE_RANGES[type];
+  if (!ref) return null;
+  const num = parseFloat(value);
+  if (isNaN(num)) return null;
+  for (const range of ref.ranges) {
+    if (num <= range.max) return range.status;
+  }
+  return null;
+}
+
+function getTestStatusLabel(type: LabTestType, value: string): string | null {
+  const ref = REFERENCE_RANGES[type];
+  if (!ref) return null;
+  const num = parseFloat(value);
+  if (isNaN(num)) return null;
+  for (const range of ref.ranges) {
+    if (num <= range.max) return range.label;
+  }
+  return null;
+}
+
+const STATUS_COLORS: Record<TestStatus, { text: string; bg: string }> = {
+  normal: { text: '#16a34a', bg: '#dcfce7' },
+  warning: { text: '#d97706', bg: '#fef3c7' },
+  critical: { text: '#dc2626', bg: '#fee2e2' },
+};
+
 const LAB_TEST_META: LabTestMeta[] = [
   { type: 'hba1c', label: 'HbA1c', unit: '%', icon: '🩸', normalRange: '< 5.7%', description: 'Average blood sugar over 2–3 months' },
   { type: 'kidney', label: 'Kidney Profile', unit: 'mg/dL', icon: '🫘', normalRange: 'Creatinine < 1.2', description: 'Kidney function assessment' },
@@ -73,9 +134,10 @@ export default function TestsScreen() {
       notes: inputNotes.trim() || undefined,
     };
 
-    await saveLabTest(test);
-    await loadData();
+    const { error: saveError } = await saveLabTest(test);
     setSaving(false);
+    if (saveError) { Alert.alert('Save Failed', saveError); return; }
+    await loadData();
     setModalVisible(false);
   }
 
@@ -105,11 +167,27 @@ export default function TestsScreen() {
                   <Text className="text-gray-400 text-xs mt-0.5">{meta.description}</Text>
 
                   {latest ? (
-                    <View className="mt-2 flex-row items-center gap-2">
+                    <View className="mt-2 flex-row items-center gap-2 flex-wrap">
                       <Text className="text-blue-600 font-bold text-sm">
                         {latest.value}{latest.unit ? ` ${latest.unit}` : ''}
                       </Text>
                       <Text className="text-gray-400 text-xs">· {formatDate(latest.date)}</Text>
+                      {(() => {
+                        const st = getTestStatus(meta.type, latest.value);
+                        const lb = getTestStatusLabel(meta.type, latest.value);
+                        if (!st || !lb) return null;
+                        const colors = STATUS_COLORS[st];
+                        return (
+                          <View
+                            style={{ backgroundColor: colors.bg }}
+                            className="rounded-full px-2 py-0.5"
+                          >
+                            <Text style={{ color: colors.text }} className="text-xs font-semibold">
+                              {lb}
+                            </Text>
+                          </View>
+                        );
+                      })()}
                     </View>
                   ) : (
                     <Text className="text-gray-400 text-xs mt-1 italic">{t.tests.noResult}</Text>

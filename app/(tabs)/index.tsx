@@ -77,7 +77,7 @@ export default function DashboardScreen() {
         <View className="bg-blue-600 px-5 pt-4 pb-8">
           <Text className="text-blue-100 text-sm">{dateStr}</Text>
           <Text className="text-white text-2xl font-bold mt-1">
-            Hello, {profile?.name ?? 'there'} 👋
+            Hello, {profile?.full_name ?? 'there'} 👋
           </Text>
           {profile?.diabetes_type && (
             <View className="mt-2 flex-row">
@@ -180,7 +180,9 @@ export default function DashboardScreen() {
             </View>
             <View className="flex-1 bg-white rounded-2xl p-4 shadow-sm items-center">
               <Text className="text-2xl">🎯</Text>
-              <Text className="text-sm font-bold text-gray-900 mt-1">70–140</Text>
+              <Text className="text-sm font-bold text-gray-900 mt-1">
+                {profile?.target_range_min ?? 70}–{profile?.target_range_max ?? 140}
+              </Text>
               <Text className="text-gray-500 text-xs text-center mt-0.5">{t.home.mgdlTarget}</Text>
             </View>
           </View>

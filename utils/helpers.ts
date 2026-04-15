@@ -107,7 +107,10 @@ export function getShortDate(isoDate: string): string {
 }
 
 export function generateId(): string {
-  return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 export function calculateStreak(readingDates: string[]): number {

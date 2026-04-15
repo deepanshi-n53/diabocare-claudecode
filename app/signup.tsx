@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useLanguage } from '../context/LanguageContext';
-import { LANGUAGE_OPTIONS, Language } from '../lib/translations';
+import { LANGUAGE_OPTIONS } from '../lib/translations';
 
 const DIABETES_TYPES = ['type1', 'type2', 'gestational', 'prediabetes'] as const;
 type DiabetesType = typeof DIABETES_TYPES[number];
@@ -42,7 +42,12 @@ export default function SignUpScreen() {
     if (password.length < 6) { Alert.alert('', t.errors.missingPassword); return; }
 
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+    // Pass full_name as metadata so the DB trigger can use it
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { data: { full_name: name.trim() } },
+    });
 
     if (error || !data.user) {
       Alert.alert('', error?.message ?? t.errors.authFailed);
@@ -50,10 +55,10 @@ export default function SignUpScreen() {
       return;
     }
 
-    // Insert profile
-    const { error: profileError } = await supabase.from('profiles').insert({
+    // Upsert (not insert) — the trigger may have already created the row
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: data.user.id,
-      name: name.trim(),
+      full_name: name.trim(),
       diabetes_type: diabetesType,
       language,
     });
